@@ -33,18 +33,6 @@ function defaultRoute(req, res, next) {
     'Access-Control-Allow-Origin': '*'
   });
 
-  res.write(`<!DOCTYPE html>
-    <html lang="en">
-    <head>
-      <title>Preact Hacker News</title>
-      <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=5" />
-      ${supportsManifest ? '<meta name="theme-color" content="#0077B5" />' : ''}
-      ${resources.inline !== null ? `<style>${resources.inline}</style>` : resources.css !== null ? `<link rel="stylesheet" href="${resources.css}" />` : ''}
-      ${supportsManifest ? '<link rel="manifest" href="/dist/chrome/manifest.json" />' : ''}
-      <link rel="icon" href="/static/icons/favicon.png">
-    </head>
-    <body>`);
-
   let Route = <LoadingView />;
   let data = {};
 
@@ -54,6 +42,21 @@ function defaultRoute(req, res, next) {
     Route = <ListViewWithData data={data} />;
   }
 
+  res.write(`<!DOCTYPE html>
+    <html lang="en">
+    <head>
+      <title>Preact Hacker News</title>
+      <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=5" />
+      ${supportsManifest ? '<meta name="theme-color" content="#0077B5" />' : ''}
+      ${resources.inline !== null ? `<style>${resources.inline}</style>` : resources.css !== null ? `<link rel="stylesheet" href="${resources.css}" />` : ''}
+      ${supportsManifest ? '<link rel="manifest" href="/dist/chrome/manifest.json" />' : ''}
+      <link rel="icon" href="/static/icons/favicon.png">
+      <script>window.seed=${JSON.stringify(data)}</script>
+      <script src='${resources.js}' defer></script>
+      ${resources.route && resources.route.js ? `<script src='${resources.route.js}' defer></script>` : ''}
+    </head>
+    <body>`);
+
   const RoutedViewComponent = render(
     <RoutedView url={req.url} delay={0}>
       {Route}
@@ -62,9 +65,6 @@ function defaultRoute(req, res, next) {
 
   res.write(`
         ${RoutedViewComponent}
-        <script>window.seed=${JSON.stringify(data)}</script>
-        <script src='${resources.js}' defer></script>
-        ${resources.route && resources.route.js ? `<script src='${resources.route.js}' defer></script>` : ''}
       </body>
     </html>`);
 
