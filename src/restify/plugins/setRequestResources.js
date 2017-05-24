@@ -30,7 +30,7 @@ function setRequestResources(resourcesList) {
       }
 
       return {
-        js: routeResources.ListHome
+        js: routeResources.ListHome ? routeResources.ListHome : null
       };
     }
 
