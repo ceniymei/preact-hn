@@ -33,15 +33,6 @@ function defaultRoute(req, res, next) {
     'Access-Control-Allow-Origin': '*'
   });
 
-  let Route = <LoadingView />;
-  let data = {};
-
-  const listType = req.params.type ? LIST_TYPES[req.params.type] : req.url === '/' ? LIST_TYPES['top'] : null;
-  if (listType) {
-    data = serverRoute(req, {type: listType});
-    Route = <ListViewWithData data={data} />;
-  }
-
   res.write(`<!DOCTYPE html>
     <html lang="en">
     <head>
@@ -51,10 +42,17 @@ function defaultRoute(req, res, next) {
       ${resources.inline !== null ? `<style>${resources.inline}</style>` : resources.css !== null ? `<link rel="stylesheet" href="${resources.css}" />` : ''}
       ${supportsManifest ? '<link rel="manifest" href="/dist/chrome/manifest.json" />' : ''}
       <link rel="icon" href="/static/icons/favicon.png">
-      <script>window.seed=${JSON.stringify(data)}</script>
-      <script src='${resources.js}' async defer></script>
     </head>
     <body>`);
+
+  let Route = <LoadingView />;
+  let data = {};
+
+  const listType = req.params.type ? LIST_TYPES[req.params.type] : req.url === '/' ? LIST_TYPES['top'] : null;
+  if (listType) {
+    data = serverRoute(req, {type: listType});
+    Route = <ListViewWithData data={data} />;
+  }
 
   const RoutedViewComponent = render(
     <RoutedView url={req.url} delay={0}>
@@ -62,18 +60,13 @@ function defaultRoute(req, res, next) {
     </RoutedView>
   );
 
-  /*
-   * TODO: Move to use same router on server and client.
-   * <Routes url={req.url} delay={0} child={<ListViewWithData data={serverRoute(req, {type: listType})} />} />
-   */
-
   res.write(`
         ${RoutedViewComponent}
+        <script>window.seed=${JSON.stringify(data)}</script>
+        <script src='${resources.js}' defer></script>
+        ${resources.route && resources.route.js ? `<script src='${resources.route.js}' defer></script>` : ''}
       </body>
     </html>`);
-
-    // TODO: <script>window.seed=${JSON.stringify(data)};</script>
-    // TODO: More research on why these scripts cannot be loaded async.
 
   res.end();
 
